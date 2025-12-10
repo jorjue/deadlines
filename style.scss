@@ -455,3 +455,17 @@ footer {
     display: block;
   } */
 }
+
+.date-input-wrapper {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.date-input-wrapper input[type="date"],
+.date-input-wrapper input[type="month"] {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 0;
+}

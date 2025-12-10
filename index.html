@@ -36,12 +36,16 @@
 
                     <div id="exactDeadlineFields">
                         <label for="taskDeadline">提出期限（日付）</label>
-                        <input type="date" class="task-deadline" id="taskDeadline">
+                        <div class="date-input-wrapper">
+                            <input type="date" class="task-deadline" id="taskDeadline">
+                        </div>
                     </div>
 
                     <div id="roughDeadlineFields">
                         <label for="taskDeadlineMonth">提出期限（月）</label>
-                        <input type="month" id="taskDeadlineMonth">
+                        <div class="date-input-wrapper">
+                            <input type="month" id="taskDeadlineMonth">
+                        </div>
 
                         <label for="taskDeadlinePart">おおまか指定</label>
                         <select id="taskDeadlinePart">
