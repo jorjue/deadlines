@@ -116,9 +116,13 @@ select:focus {
 /* deadlineTypeごとのブロック */
 #exactDeadlineFields,
 #roughDeadlineFields {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: block;
+  margin-top: 8px;
+}
+
+#exactDeadlineFields > * ＋ *,
+#roughDeadlineFields > * ＋ * {
+    margin-top: 4px;
 }
 
 /* JSが切り替えるので、初期状態だけ「rough」を隠しておく */
