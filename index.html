@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提出期限管理アプリ（仮）</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+
+        <h1 class="header-title">提出期限管理アプリ（仮）</h1>
+    </header>
+
+    <main>
+
+        <section class="task-input">
+
+            <button type="button" class="task-input-toggle" id="taskInputToggle">＋ タスクを追加</button>
+
+            <div class="task-input-body" id="taskInputBody">
+
+                <form id="taskForm" method="post">
+
+                    <label for="taskTitle">タスク名</label>
+                    <input type="text" class="task-title" id="taskTitle" placeholder="タスク名を入力">
+
+                    <label for="deadlineType">提出期限の指定方法</label>
+                    <select id="deadlineType">
+                        <option value="exact">日付で指定</option>
+                        <option value="rough">おおまか指定</option>
+                    </select>
+
+                    <div id="exactDeadlineFields">
+                        <label for="taskDeadline">提出期限（日付）</label>
+                        <input type="date" class="task-deadline" id="taskDeadline">
+                    </div>
+
+                    <div id="roughDeadlineFields">
+                        <label for="taskDeadlineMonth">提出期限（月）</label>
+                        <input type="month" id="taskDeadlineMonth">
+
+                        <label for="taskDeadlinePart">おおまか指定</label>
+                        <select id="taskDeadlinePart">
+                            <option value="early">上旬</option>
+                            <option value="middle">中旬</option>
+                            <option value="late">下旬</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="task-submit" id="taskSubmit">追加</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="task-list">
+
+            <ul class="task-lists" id="taskLists">
+
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        &copy; Atsushi 2025
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

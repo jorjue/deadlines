@@ -1,0 +1,452 @@
+/* リセット & ベース設定 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Arial, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN",
+    "游ゴシック体", "YuGothic", "メイリオ", Meiryo, sans-serif;
+  color: #222;
+  background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ヘッダー */
+header {
+  background: #0f172a;
+  color: #f9fafb;
+  padding: 16px 20px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
+}
+
+.header-title {
+  margin: 0;
+  font-size: 1.4rem;
+  text-align: center;
+}
+
+/* メインコンテナ */
+main {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 24px auto;
+  padding: 0 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* カード風セクション */
+.task-input,
+.task-list {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px 16px 20px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+/* フォーム内レイアウト */
+#taskForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 2px;
+}
+
+/* 入力フィールド共通 */
+input[type="text"],
+input[type="date"],
+input[type="month"],
+select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+  outline: none;
+  background-color: #f9fafb;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+input[type="date"],
+input[type="month"] {
+    max-width: 100%;
+    min-width: 0;
+}
+
+#exactDeadlineFields,
+#roughDeadlineFields,
+.task-input {
+    min-width: 0;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="month"]:focus,
+select:focus {
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* deadlineTypeごとのブロック */
+#exactDeadlineFields,
+#roughDeadlineFields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* JSが切り替えるので、初期状態だけ「rough」を隠しておく */
+#roughDeadlineFields {
+  display: none;
+}
+
+/* 追加ボタン */
+.task-submit {
+  margin-top: 8px;
+  align-self: flex-end;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.1s ease,
+    background-color 0.1s ease;
+}
+
+.task-submit:hover {
+  background: #2563eb;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.task-submit:active {
+  background: #1d4ed8;
+  box-shadow: 0 4px 9px rgba(30, 64, 175, 0.6);
+  transform: translateY(1px);
+}
+
+/* タスク一覧 */
+.task-lists {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* タスク1件分のカード */
+.task-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左側の色バー（アクセント） */
+.task-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #3b82f6, #a855f7);
+}
+
+/* タイトルと期限部分 */
+.task-item-title {
+  font-weight: 600;
+  font-size: 1rem;
+  padding-left: 6px;
+}
+
+.task-item-deadline {
+  font-size: 0.85rem;
+  color: #6b7280;
+  padding-left: 6px;
+}
+
+/* 削除ボタン */
+.task-delete {
+  align-self: flex-end;
+  margin-top: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: #f97373;
+  color: #ffffff;
+  transition: background-color 0.12s ease, transform 0.1s ease,
+    box-shadow 0.1s ease;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.35);
+}
+
+.task-delete:hover {
+  background: #ef4444;
+  transform: translateY(-1px);
+}
+
+.task-delete:active {
+  background: #b91c1c;
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.5);
+}
+
+/* 画面幅が広いときは、タスク内を横並びにして情報を整理 */
+@media (min-width: 640px) {
+  .task-item {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .task-item-title {
+    flex: 1 1 auto;
+  }
+
+  .task-item-deadline {
+    flex: 0 0 auto;
+    margin-left: 8px;
+  }
+
+  .task-delete {
+    margin-top: 0;
+    margin-left: auto;
+  }
+}
+
+/* フッター */
+footer {
+  text-align: center;
+  padding: 8px 12px 14px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* ===============================
+   簡易表示 & 詳細表示 用の追加スタイル
+   =============================== */
+
+/* タスクカード全体（前からある .task-item に追加で効かせたい場合の調整） */
+.task-item {
+  margin: 4px 0;
+}
+
+/* 画面が広い時も task-item は縦に積む */
+@media (min-width: 640px) {
+  .task-item {
+    display: block;
+  }
+}
+
+/* ---------- 簡易ビュー ---------- */
+
+.task-compact {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.task-thumb {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e5e7eb, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #4b5563;
+  text-transform: full-width;
+  overflow: hidden;
+}
+
+.task-compact-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 進捗ゲージ */
+.task-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.task-progress-value {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.2s ease;
+}
+
+/* タップヒント */
+.task-expand-hint {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+/* ---------- 詳細ビュー ---------- */
+
+.task-detail {
+  display: none; /* 初期は閉じておく */
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  animation: task-detail-expand 0.2s ease;
+}
+
+@keyframes task-detail-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.task-detail-image {
+  width: 100%;
+  min-height: 100px;
+  border-radius: 10px;
+  background: repeating-linear-gradient(
+    45deg,
+    #f3f4f6,
+    #f3f4f6 10px,
+    #e5e7eb 10px,
+    #e5e7eb 20px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.task-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.task-info-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.info-label {
+  flex: 0 0 70px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.info-value {
+  flex: 1 1 auto;
+  color: #374151;
+}
+
+/* 削除ボタン（詳細ビュー用に少し余白調整） */
+.task-detail .task-delete {
+  margin-top: 8px;
+  margin-left: auto;
+  display: inline-block;
+}
+
+/* ==========================
+   タスク入力フォームの開閉
+   ========================== */
+
+.task-input-toggle {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.12s ease, transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.task-input-toggle:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.45);
+}
+
+.task-input-toggle:active {
+  background: #047857;
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(4, 120, 87, 0.6);
+}
+
+/* フォーム本体：デフォルトは閉じる */
+.task-input-body {
+  margin-top: 12px;
+  display: none;
+}
+
+/* 開いた状態 */
+.task-input-body.is-open {
+  display: block;
+}
+
+/* 画面が広いときは最初から開いておいてもいい場合はここで調整可能 */
+@media (min-width: 768px) {
+  /* 必要ならPCでは常に開いておくなどもできる */
+  /* .task-input-body {
+    display: block;
+  } */
+}
