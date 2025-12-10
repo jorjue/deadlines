@@ -87,14 +87,19 @@ select {
 
 input[type=date],
 input[type=month] {
+  width: 100%;
   max-width: 100%;
   min-width: 0;
+  flex: 1 1 auto;
+  box-sizing: border-box;
 }
 
 #exactDeadlineFields,
 #roughDeadlineFields,
-.task-input {
+.task-input,
+#taskForm {
   min-width: 0;
+  width: 100%;
 }
 
 input[type=text]:focus,
