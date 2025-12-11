@@ -169,6 +169,9 @@ function renderTasks() {
         deleteButton.textContent = 'タスクを削除';
 
         deleteButton.addEventListener('click', () => {
+            if (!confirm('タスクを削除してよろしいですか？')) {
+                return;
+            }
             tasks = tasks.filter((t) => t.id !== task.id);
             saveTasks();
             renderTasks();
