@@ -92,7 +92,15 @@ function renderTasks() {
         // サムネイル（とりあえずプレースホルダー）
         const thumb = document.createElement('div');
         thumb.classList.add('task-thumb');
-        thumb.textContent = task.title ? task.title.charAt(0) : '？';
+
+        if (task.coverImage) {
+            thumb.style.backgroundImage = `url(${task.coverImage})`;
+            thumb.style.backgroundSize = 'cover';
+            thumb.style.backgroundPosition = 'center';
+            thumb.textContent = '';
+        } else {
+            thumb.textContent = task.title ? task.title.charAt(0) : '？';
+        }
 
         // 右側のテキスト部分
         const compactMain = document.createElement('div');
@@ -144,7 +152,14 @@ function renderTasks() {
         // 表紙画像（本実装は後で）とりあえず枠だけ
         const detailImage = document.createElement('div');
         detailImage.classList.add('task-detail-image');
-        detailImage.textContent = '表紙画像（未設定）';
+        if (task.coverImage) {
+            detailImage.style.backgroundImage = `url${task.coverImage}`;
+            detailImage.style.backgroundSize = 'cover';
+            detailImage.style.backgroundPosition = 'center';
+            detailImage.textContent = '';
+        } else {
+            detailImage.textContent = '表紙画像（未設定）';
+        }
 
         // 情報リスト
         const infoList = document.createElement('div');
@@ -201,10 +216,11 @@ function renderTasks() {
     });
 }
 
-taskForm.addEventListener('submit', (e) => {
+taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const taskTitleInput = document.getElementById('taskTitle');
+    const coverImageInput = document.getElementById('coverImage');
     const taskTitle = taskTitleInput.value;
 
     const deadlineType = deadlineTypeSelect.value; // 'exact' or 'rough'
@@ -259,6 +275,21 @@ taskForm.addEventListener('submit', (e) => {
         displayDeadline = `${year}年${Number(month)}月${partLabel}`;
     }
 
+    let coverImageBase64 = null;
+
+    if (coverImageInput.files && coverImageInput.files[0]) {
+        const file = coverImageInput.files[0];
+        const reader = new FileReader();
+
+        await new Promise((resolve) => {
+            reader.onload = () => {
+                coverImageBase64 = reader.result;
+                resolve();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     const newTask = {
         id: Date.now(),
         title: taskTitle,
@@ -266,6 +297,7 @@ taskForm.addEventListener('submit', (e) => {
         deadline: normalizedDeadline,
         displayDeadline: displayDeadline,
         progress: 0, // 全体進捗状況
+        coverImage: coverImageBase64,
     };
 
     tasks.push(newTask);

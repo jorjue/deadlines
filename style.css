@@ -450,4 +450,11 @@ footer {
   max-width: 100%;
   box-sizing: border-box;
   border-radius: 0;
+}
+
+#coverImage {
+  padding: 6px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
 }/*# sourceMappingURL=style.css.map */
