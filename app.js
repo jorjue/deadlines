@@ -2,6 +2,71 @@ let tasks = [];
 
 const STORAGE_KEY = 'deadlineTasks';
 
+const DB_NAME = 'deadlinesDB';
+const DB_VERSION = 1;
+const IMAGE_STORE = 'images';
+
+const objectUrlCache = new Map(); //これはどういう意味？
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+        req.onupgradeneeded = () => { //これもどういう意味？
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IMAGE_STORE)) {
+                db.createObjectStore(IMAGE_STORE, { keyPath: 'id', autoIncrement: true });
+            }
+        };
+
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function saveImageBlob(blob) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE, 'readwrite');
+        const store = tx.objectStore(IMAGE_STORE);
+        const req = store.add({ blob, createdAt: Date.now() });
+
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function getImageBlob(imageId) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE, 'readonly');
+        const store = tx.objectStore(IMAGE_STORE);
+        const req = store.get(imageId);
+
+        req.onsuccess = () => resolve(req.result?.blob ?? null);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function deleteImageBlob(imageId) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE, 'readwrite');
+        const store = tx.objectStore(IMAGE_STORE);
+        const req = store.delete(imageId);
+
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function revokeAllObjectUrls() {
+    for (const url of objectUrlCache.values()) {
+        URL.revokeObjectURL(url);
+    }
+    objectUrlCache.clear();
+}
+
 function saveTasks() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
@@ -34,9 +99,9 @@ function loadTasks() {
     renderTasks();
 }
 
-async function fileToCompressedDataURL(file, {
-    maxSize = 1024,
-    quality = 0.75,
+async function fileToCompressedBlob(file, {
+    maxSize = 1280,
+    quality = 0.8,
     mimeType = 'image/jpeg',
 } = {}) {
     const img = await new Promise((resolve, reject) => {
@@ -46,7 +111,7 @@ async function fileToCompressedDataURL(file, {
             URL.revokeObjectURL(url);
             resolve(image);
         };
-        image.oneeror = reject;
+        image.onerror = reject;
         image.src = url;
     });
 
@@ -61,10 +126,11 @@ async function fileToCompressedDataURL(file, {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, width, height);
+    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
 
-    return canvas.toDataURL(mimeType, quality);
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), mimeType, quality);
+    });
 }
 
 // タスクフォームのID取得
@@ -116,6 +182,8 @@ if (toggleButton && inputBody) {
 
 // 入力したタスクの描写に関する設定
 function renderTasks() {
+    revokeAllObjectUrls(); //意味は？
+
     const taskListElement = document.getElementById('taskLists');
 
     taskListElement.innerHTML = '';
@@ -135,10 +203,16 @@ function renderTasks() {
         thumb.classList.add('task-thumb');
 
         if (task.coverImage) {
-            thumb.style.backgroundImage = `url(${task.coverImage})`;
-            thumb.style.backgroundSize = 'cover';
-            thumb.style.backgroundPosition = 'center';
-            thumb.textContent = '';
+
+            getImageBlob(task.coverImageId).then((blob) => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                objectUrlCache.set(task.coverImageId, url);
+                thumb.style.backgroundImage = `url(${task.coverImage})`;
+                thumb.style.backgroundSize = 'cover';
+                thumb.style.backgroundPosition = 'center';
+                thumb.textContent = '';
+            });
         } else {
             thumb.textContent = task.title ? task.title.charAt(0) : '？';
         }
@@ -193,11 +267,18 @@ function renderTasks() {
         // 表紙画像（本実装は後で）とりあえず枠だけ
         const detailImage = document.createElement('div');
         detailImage.classList.add('task-detail-image');
-        if (task.coverImage) {
-            detailImage.style.backgroundImage = `url${task.coverImage})`;
-            detailImage.style.backgroundSize = 'cover';
-            detailImage.style.backgroundPosition = 'center';
-            detailImage.textContent = '';
+        if (task.coverImageId) {
+            getImageBlob(task.coverImageId).then((blob) => {
+                if (!blob) {
+                    detailImage.textContent = '表紙画像（未設定）';
+                    return;
+                }
+                const url = URL.createObjectURL(blob);
+                detailImage.style.backgroundImage = `url${task.coverImage})`;
+                detailImage.style.backgroundSize = 'cover';
+                detailImage.style.backgroundPosition = 'center';
+                detailImage.textContent = '';
+            });
         } else {
             detailImage.textContent = '表紙画像（未設定）';
         }
@@ -224,10 +305,22 @@ function renderTasks() {
         deleteButton.classList.add('task-delete');
         deleteButton.textContent = 'タスクを削除';
 
-        deleteButton.addEventListener('click', () => {
-            if (!confirm('タスクを削除してよろしいですか？')) {
-                return;
+        deleteButton.addEventListener('click', async () => {
+            if (!confirm('タスクを削除してよろしいですか？')) return;
+
+            if (task.coverImageId) {
+                try {
+                    const url = objectUrlCache.get(task.coverImageId);
+                    if (url) {
+                        URL.revokeObjectURL(url);
+                        objectUrlCache.delete(task.coverImageId);
+                    }
+                    await deleteImageBlob(task.coverImageId);
+                } catch (e) {
+                    console.warn('画像削除に失敗:', e);
+                }
             }
+            
             tasks = tasks.filter((t) => t.id !== task.id);
             saveTasks();
             renderTasks();
@@ -308,15 +401,24 @@ taskForm.addEventListener('submit', async (e) => {
         displayDeadline = `${year}年${Number(month)}月${partLabel}`;
     }
 
-    // ===== 画像をBase64化 =====
-    let coverImageBase64 = null;
+    // ===== 画像をIndexedDBへ =====
+    let coverImageId = null;
 
     if (coverImageInput?.files?.[0]) {
         const file = coverImageInput.files[0];
-        coverImageBase64 = await fileToCompressedDataURL(file, {
-            maxSize: 1024,
-            quality: 0.75,
+
+        const blob = await fileToCompressedBlob(file, {
+            maxSize: 1600,
+            quality: 0.85,
+            mimeType: 'image/jpeg',
         });
+
+        if (!blob) {
+            alert('画像の変換に失敗しました');
+            return;
+        }
+
+        coverImageId = await saveImageBlob(blob);
     }
 
 
@@ -327,15 +429,12 @@ taskForm.addEventListener('submit', async (e) => {
         deadline: normalizedDeadline,
         displayDeadline,
         progress: 0,
-        coverImage: coverImageBase64,
+        coverImageId,
     };
 
     tasks.push(newTask);
     tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-    if (!saveTasks()) {
-        tasks = tasks.filter(t => t.id !== newTask.id);
-        return;
-    }
+    saveTasks();
     renderTasks();
 
     // 入力リセット
@@ -348,7 +447,6 @@ taskForm.addEventListener('submit', async (e) => {
     // deadlineTypeSelect.value = 'exact';
     // updateDeadlineFields();
 });
-
 
 updateDeadlineFields();
 loadTasks();
