@@ -3,7 +3,15 @@ let tasks = [];
 const STORAGE_KEY = 'deadlineTasks';
 
 function saveTasks() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        return true;
+    } catch (err) {
+        console.error('保存に失敗:', err);
+        alert('保存容量が不足している可能性があります。画像サイズを小さくして再試行してください。');
+        return false;
+    }
+    // localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
 function loadTasks() {
@@ -293,7 +301,10 @@ taskForm.addEventListener('submit', async (e) => {
 
     tasks.push(newTask);
     tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-    saveTasks();
+    if (!saveTasks()) {
+        tasks = tasks.filter(t => t.id !== newTask.id);
+        return;
+    }
     renderTasks();
 
     // 入力リセット
