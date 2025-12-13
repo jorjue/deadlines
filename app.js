@@ -153,7 +153,7 @@ function renderTasks() {
         const detailImage = document.createElement('div');
         detailImage.classList.add('task-detail-image');
         if (task.coverImage) {
-            detailImage.style.backgroundImage = `url${task.coverImage}`;
+            detailImage.style.backgroundImage = `url${task.coverImage})`;
             detailImage.style.backgroundSize = 'cover';
             detailImage.style.backgroundPosition = 'center';
             detailImage.textContent = '';
@@ -221,16 +221,15 @@ taskForm.addEventListener('submit', async (e) => {
 
     const taskTitleInput = document.getElementById('taskTitle');
     const coverImageInput = document.getElementById('coverImage');
-    const taskTitle = taskTitleInput.value;
+    const taskTitle = taskTitleInput.value.trim();
 
-    const deadlineType = deadlineTypeSelect.value; // 'exact' or 'rough'
+    const deadlineType = deadlineTypeSelect.value;
 
     if (!taskTitle) {
         alert('タスク名を入力してください');
         return;
     }
 
-    // deadlineType に応じて入力チェック
     if (deadlineType === 'exact' && !taskDeadlineInput.value) {
         alert('提出期限（日付）を入力してください');
         return;
@@ -245,47 +244,39 @@ taskForm.addEventListener('submit', async (e) => {
     let displayDeadline = '';
 
     if (deadlineType === 'exact') {
-        const dateValue = taskDeadlineInput.value;
-        normalizedDeadline = dateValue;
-        displayDeadline = dateValue;
-
-    } else if (deadlineType === 'rough') {
+        normalizedDeadline = taskDeadlineInput.value;
+        displayDeadline = taskDeadlineInput.value;
+    } else {
         const monthValue = taskDeadlineMonthInput.value;   // '2025-12'
-        const partValue = taskDeadlinePartSelect.value;    // 'early' など
-
+        const partValue = taskDeadlinePartSelect.value;    // 'early'など
         const [year, month] = monthValue.split('-');
 
         let day;
         let partLabel;
 
         if (partValue === 'early') {
-            day = 10;
-            partLabel = '上旬';
+            day = 10; partLabel = '上旬';
         } else if (partValue === 'middle') {
-            day = 20;
-            partLabel = '中旬';
+            day = 20; partLabel = '中旬';
         } else {
-            const lastDay = new Date(Number(year), Number(month), 0).getDate();
-            day = lastDay;
+            day = new Date(Number(year), Number(month), 0).getDate();
             partLabel = '下旬';
         }
 
-        const dayString = String(day).padStart(2, '0');
-        normalizedDeadline = `${year}-${month}-${dayString}`;
+        normalizedDeadline = `${year}-${month}-${String(day).padStart(2, '0')}`;
         displayDeadline = `${year}年${Number(month)}月${partLabel}`;
     }
 
+    // ===== 画像をBase64化 =====
     let coverImageBase64 = null;
 
-    if (coverImageInput.files && coverImageInput.files[0]) {
+    if (coverImageInput?.files?.[0]) {
         const file = coverImageInput.files[0];
-        const reader = new FileReader();
 
-        await new Promise((resolve) => {
-            reader.onload = () => {
-                coverImageBase64 = reader.result;
-                resolve();
-            };
+        coverImageBase64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
             reader.readAsDataURL(file);
         });
     }
@@ -293,17 +284,15 @@ taskForm.addEventListener('submit', async (e) => {
     const newTask = {
         id: Date.now(),
         title: taskTitle,
-        deadlineType: deadlineType,
+        deadlineType,
         deadline: normalizedDeadline,
-        displayDeadline: displayDeadline,
-        progress: 0, // 全体進捗状況
+        displayDeadline,
+        progress: 0,
         coverImage: coverImageBase64,
     };
 
     tasks.push(newTask);
-
     tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-
     saveTasks();
     renderTasks();
 
@@ -312,11 +301,12 @@ taskForm.addEventListener('submit', async (e) => {
     taskDeadlineInput.value = '';
     taskDeadlineMonthInput.value = '';
     taskDeadlinePartSelect.value = 'early';
-
-    // ついでに exact に戻すなら：
-    // deadlineTypeSelect.value = 'exact';
-    // updateDeadlineFields();
+    coverImageInput.value = ''; // ★ これ大事：同じ画像を連続で選べるようになる
 });
 
+
+// ついでに exact に戻すなら：
+// deadlineTypeSelect.value = 'exact';
+// updateDeadlineFields();
 updateDeadlineFields();
 loadTasks();
