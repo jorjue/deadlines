@@ -202,13 +202,12 @@ function renderTasks() {
         const thumb = document.createElement('div');
         thumb.classList.add('task-thumb');
 
-        if (task.coverImage) {
-
+        if (task.coverImageId) {
             getImageBlob(task.coverImageId).then((blob) => {
                 if (!blob) return;
                 const url = URL.createObjectURL(blob);
                 objectUrlCache.set(task.coverImageId, url);
-                thumb.style.backgroundImage = `url(${task.coverImage})`;
+                thumb.style.backgroundImage = `url(${url})`;
                 thumb.style.backgroundSize = 'cover';
                 thumb.style.backgroundPosition = 'center';
                 thumb.textContent = '';
@@ -274,7 +273,8 @@ function renderTasks() {
                     return;
                 }
                 const url = URL.createObjectURL(blob);
-                detailImage.style.backgroundImage = `url${task.coverImage})`;
+                objectUrlCache.set(task.coverImageId, url);
+                detailImage.style.backgroundImage = `url(${url})`;
                 detailImage.style.backgroundSize = 'cover';
                 detailImage.style.backgroundPosition = 'center';
                 detailImage.textContent = '';
@@ -320,7 +320,7 @@ function renderTasks() {
                     console.warn('画像削除に失敗:', e);
                 }
             }
-            
+
             tasks = tasks.filter((t) => t.id !== task.id);
             saveTasks();
             renderTasks();
