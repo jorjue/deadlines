@@ -34,6 +34,39 @@ function loadTasks() {
     renderTasks();
 }
 
+async function fileToCompressedDataURL(file, {
+    maxSize = 1024,
+    quality = 0.75,
+    mimeType = 'image/jpeg',
+} = {}) {
+    const img = await new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(url);
+            resolve(image);
+        };
+        image.oneeror = reject;
+        image.src = url;
+    });
+
+    let { width, height } = img;
+    const longSide = Math.max(width, height);
+    if (longSide > maxSize) {
+        const scale = maxSize / longSide;
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    return canvas.toDataURL(mimeType, quality);
+}
+
 // タスクフォームのID取得
 const taskForm = document.getElementById('taskForm');
 
@@ -280,14 +313,12 @@ taskForm.addEventListener('submit', async (e) => {
 
     if (coverImageInput?.files?.[0]) {
         const file = coverImageInput.files[0];
-
-        coverImageBase64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
-            reader.readAsDataURL(file);
+        coverImageBase64 = await fileToCompressedDataURL(file, {
+            maxSize: 1024,
+            quality: 0.75,
         });
     }
+
 
     const newTask = {
         id: Date.now(),
@@ -313,11 +344,11 @@ taskForm.addEventListener('submit', async (e) => {
     taskDeadlineMonthInput.value = '';
     taskDeadlinePartSelect.value = 'early';
     coverImageInput.value = ''; // ★ これ大事：同じ画像を連続で選べるようになる
+    // ついでに exact に戻すなら：
+    // deadlineTypeSelect.value = 'exact';
+    // updateDeadlineFields();
 });
 
 
-// ついでに exact に戻すなら：
-// deadlineTypeSelect.value = 'exact';
-// updateDeadlineFields();
 updateDeadlineFields();
 loadTasks();
