@@ -209,7 +209,7 @@ function renderTasks() {
                 objectUrlCache.set(task.coverImageId, url);
                 thumb.style.backgroundImage = `url(${url})`;
                 thumb.style.backgroundSize = 'cover';
-                thumb.style.backgroundPosition = 'center';
+                thumb.style.backgroundPosition = 'top center';
                 thumb.textContent = '';
             });
         } else {
@@ -276,7 +276,7 @@ function renderTasks() {
                 objectUrlCache.set(task.coverImageId, url);
                 detailImage.style.backgroundImage = `url(${url})`;
                 detailImage.style.backgroundSize = 'cover';
-                detailImage.style.backgroundPosition = 'center';
+                detailImage.style.backgroundPosition = 'top center';
                 detailImage.textContent = '';
             });
         } else {

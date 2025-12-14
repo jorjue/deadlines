@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>提出期限管理アプリ（仮）</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="./manifest.webmanifest">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 </head>
 
 <body>
@@ -23,13 +28,13 @@
 
             <div class="task-input-body" id="taskInputBody">
 
-                <form id="taskForm" method="post">
+                <form id="taskForm">
 
                     <label for="taskTitle">タスク名</label>
                     <input type="text" class="task-title" id="taskTitle" placeholder="タスク名を入力">
 
                     <label for="coverImage">表示画像（任意）</label>
-                    <input type="file" id="coverImage" accept="image/" capture="envirenment">
+                    <input type="file" id="coverImage" accept="image/" capture="environment">
 
                     <label for="deadlineType">提出期限の指定方法</label>
                     <select id="deadlineType">
@@ -76,6 +81,13 @@
     </footer>
 
     <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(console.error);
+            });
+        }
+    </script>
 </body>
 
 </html>
