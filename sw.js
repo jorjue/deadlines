@@ -1,13 +1,16 @@
-const CACHE_NAME = 'deadlines-shell-v2';
+const CACHE_NAME = 'deadlines-shell-v3';
+
+const INDEX_URL = new URL('./index.html', self.registration.scope).toString();
+
 const APP_SHELL = [
-    './',
     './index.html',
     './style.css',
     './app.js',
     './manifest.webmanifest',
     './icons/icon-192.png',
     './icons/icon-512.png',
-    './icons/maskable-512.png'
+    './icons/icon-512-maskable.png',
+    './icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -30,28 +33,67 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const req = event.request;
 
-    // GET以外は触らない
+    // GET以外は触らない（POSTなどを壊さない）
     if (req.method !== 'GET') return;
 
     const url = new URL(req.url);
 
-    // 自分のオリジンだけ扱う（外部はそのまま）
+    // 同一オリジンだけ対象（外部CDN等は任せる）
     if (url.origin !== self.location.origin) return;
 
-    // HTMLは「ネット優先（更新反映）」→失敗時キャッシュ
+    // ① ページ遷移（HTML）は network-first（更新されやすい）
     if (req.mode === 'navigate') {
-        event.respondWith(
-            fetch(req).then((res) => {
-                const copy = res.clone();
-                caches.open(CACHE_NAME).then((c) => c.put('./index.html', copy));
-                return res;
-            }).catch(() => caches.match('./index.html'))
-        );
+        event.respondWith((async () => {
+            try {
+                const fresh = await fetch(req);
+                const cache = await caches.open(CACHE_NAME);
+                cache.put(req, fresh.clone());
+                return fresh;
+            } catch (e) {
+                const cached = await caches.match(req);
+                return cached || caches.match(INDEX_URL);
+            }
+        })());
         return;
     }
 
-    // CSS/JS/アイコンなどは「キャッシュ優先」
-    event.respondWith(
-        caches.match(req).then((cached) => cached || fetch(req))
-    );
+
+    // ② 静的アセットは stale-while-revalidate（速い＋更新も入る）
+    const isStatic =
+        url.pathname.endsWith('.css') ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.png') ||
+        url.pathname.endsWith('.svg') ||
+        url.pathname.endsWith('.ico') ||
+        url.pathname.endsWith('.webmanifest');
+
+    if (isStatic) {
+        event.respondWith((async () => {
+            const cache = await caches.open(CACHE_NAME);
+            const cached = await cache.match(req);
+
+            const fetchAndUpdate = fetch(req)
+                .then((res) => {
+                    // res.ok 以外はキャッシュしない（404等を保存しない）
+                    if (res && res.ok) cache.put(req, res.clone());
+                    return res;
+                })
+                .catch(() => null);
+
+            // キャッシュがあれば即返し、裏で更新
+            return cached || (await fetchAndUpdate) || cached;
+        })());
+        return;
+    }
+
+    // ③ それ以外は今まで通り（軽く network-first でもOK）
+    event.respondWith((async () => {
+        const cached = await caches.match(req);
+        if (cached) return cached;
+        const res = await fetch(req);
+        const cache = await caches.open(CACHE_NAME);
+        if (res && res.ok) cache.put(req, res.clone());
+        return res;
+    })());
 });
+
