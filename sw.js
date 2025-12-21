@@ -1,7 +1,8 @@
-const CACHE_NAME = 'deadlines-shell-v4';
+const CACHE_NAME = 'deadlines-shell-v5';
 
 const INDEX_URL = new URL('./index.html', self.registration.scope).toString();
 
+// APP_SHELLには実在するファイルを入れる
 const APP_SHELL = [
     './index.html',
     './style.css',

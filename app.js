@@ -1,18 +1,22 @@
+// 期限管理の配列データ
 let tasks = [];
 
+// LocalStorageから呼び出すためのキー
 const STORAGE_KEY = 'deadlineTasks';
 
+// 写真データベースのキー
 const DB_NAME = 'deadlinesDB';
 const DB_VERSION = 1;
 const IMAGE_STORE = 'images';
 
-const objectUrlCache = new Map(); //これはどういう意味？
+const objectUrlCache = new Map();
 
+// データベースのバージョン管理
 function openDB() {
     return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
 
-        req.onupgradeneeded = () => { //これもどういう意味？
+        req.onupgradeneeded = () => {
             const db = req.result;
             if (!db.objectStoreNames.contains(IMAGE_STORE)) {
                 db.createObjectStore(IMAGE_STORE, { keyPath: 'id', autoIncrement: true });
@@ -60,6 +64,7 @@ async function deleteImageBlob(imageId) {
     });
 }
 
+// 古いObjectURL、キャッシュの解放
 function revokeAllObjectUrls() {
     for (const url of objectUrlCache.values()) {
         URL.revokeObjectURL(url);
@@ -95,10 +100,15 @@ function loadTasks() {
         tasks = [];
     }
 
-    tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    // tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    tasks.sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return new Date(a.deadline) - new Date(b.deadline);
+    });
     renderTasks();
 }
 
+// 画像データの圧縮
 async function fileToCompressedBlob(file, {
     maxSize = 1280,
     quality = 0.8,
@@ -182,7 +192,7 @@ if (toggleButton && inputBody) {
 
 // 入力したタスクの描写に関する設定
 function renderTasks() {
-    revokeAllObjectUrls(); //意味は？
+    revokeAllObjectUrls();
 
     const taskListElement = document.getElementById('taskLists');
 
@@ -326,8 +336,25 @@ function renderTasks() {
             renderTasks();
         });
 
+        const completeButton = document.createElement('button');
+        completeButton.classList.add('task-complete');
+        completeButton.textContent = task.completed ? '未完了に戻す' : 'タスクを完了';
+
+        completeButton.addEventListener('click', () => {
+            const msg = task.completed ? 'タスクを未完了に戻しますか？' : 'タスクを完了済みにしてよろしいですか？';
+            if (!confirm(msg)) return;
+            task.completed = !task.completed;
+            saveTasks();
+            tasks.sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+            });
+            renderTasks();
+        });
+
         detail.appendChild(detailImage);
         detail.appendChild(infoList);
+        detail.appendChild(completeButton);
         detail.appendChild(deleteButton);
 
         li.appendChild(detail);
@@ -346,6 +373,9 @@ function renderTasks() {
             }
         });
 
+        if (task.completed) {
+            li.classList.add('task-completed');
+        }
         taskListElement.appendChild(li);
     });
 }
@@ -430,10 +460,15 @@ taskForm.addEventListener('submit', async (e) => {
         displayDeadline,
         progress: 0,
         coverImageId,
+        completed: false,
     };
 
     tasks.push(newTask);
-    tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    // tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    tasks.sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return new Date(a.deadline) - new Date(b.deadline);
+    });
     saveTasks();
     renderTasks();
 

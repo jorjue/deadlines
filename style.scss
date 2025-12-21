@@ -208,8 +208,8 @@ select:focus {
 
 /* 削除ボタン */
 .task-delete {
-  align-self: flex-end;
   margin-top: 6px;
+  margin-left: 10px;
   padding: 5px 10px;
   border-radius: 999px;
   border: none;
@@ -233,6 +233,30 @@ select:focus {
   box-shadow: 0 2px 6px rgba(185, 28, 28, 0.5);
 }
 
+.task-complete {
+  margin-top: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: #22b722;
+  color: #fff;
+  transition: background-color 0.12s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: - 4px 10px rgba(38, 220, 38, 0.15);
+}
+
+.task-complete:hover {
+  background: #44ef44;
+  transform: translateY(-1px);
+}
+
+.task-complete:active {
+  background: #1cb91c;
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(28, 185, 28, 0.3);
+}
+
 /* 画面幅が広いときは、タスク内を横並びにして情報を整理 */
 @media (min-width: 640px) {
   .task-item {
@@ -247,11 +271,6 @@ select:focus {
   .task-item-deadline {
     flex: 0 0 auto;
     margin-left: 8px;
-  }
-
-  .task-delete {
-    margin-top: 0;
-    margin-left: auto;
   }
 }
 
@@ -401,8 +420,8 @@ footer {
 
 /* 削除ボタン（詳細ビュー用に少し余白調整） */
 .task-detail .task-delete {
-  margin-top: 8px;
-  margin-left: auto;
+  // margin-top: 8px;
+  // margin-left: auto;
   display: inline-block;
 }
 
@@ -479,4 +498,12 @@ footer {
   background: #f3f4f6;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+}
+
+.task-completed {
+  opacity: 0.6;
+}
+
+.task-completed .task-item-title {
+  text-decoration: line-through;
 }
