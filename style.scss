@@ -243,7 +243,7 @@ select:focus {
   background: #22b722;
   color: #fff;
   transition: background-color 0.12s ease, transform 0.1s ease, box-shadow 0.1s ease;
-  box-shadow: - 4px 10px rgba(38, 220, 38, 0.15);
+  box-shadow: 0 4px 10px rgba(38, 220, 38, 0.15);
 }
 
 .task-complete:hover {
