@@ -1,6 +1,31 @@
 // 期限管理の配列データ
 let tasks = [];
 
+let currentView = 'active';
+
+function updateToggleButton() {
+    if (currentView === 'active') {
+        currentToggleBtn.textContent = '📦';
+    } else if (currentView === 'archive') {
+        currentToggleBtn.textContent = '📋';
+    }
+}
+
+const currentToggleBtn = document.getElementById('currentToggleBtn');
+currentToggleBtn.addEventListener('click', () => {
+    if (currentView === 'active') {
+        currentView = 'archive';
+        updateToggleButton();
+        document.body.classList.toggle('archive-view', currentView === 'archive');
+        renderTasks();
+    } else if (currentView === 'archive') {
+        currentView = 'active';
+        updateToggleButton();
+        document.body.classList.toggle('archive-view', currentView === 'archive');
+        renderTasks();
+    }
+});
+
 // LocalStorageから呼び出すためのキー
 const STORAGE_KEY = 'deadlineTasks';
 
@@ -93,14 +118,15 @@ function loadTasks() {
     try {
         const parsed = JSON.parse(storedTasks);
         if (Array.isArray(parsed)) {
-            tasks = parsed;
+            tasks = parsed.map(t => ({ ...t, completed: !!t.completed, archived: !!t.archived }));
+        } else {
+            tasks = [];
         }
     } catch (error) {
         console.error('タスクの読み込みに失敗しました', error);
         tasks = [];
     }
 
-    // tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     tasks.sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return new Date(a.deadline) - new Date(b.deadline);
@@ -195,10 +221,17 @@ function renderTasks() {
     revokeAllObjectUrls();
 
     const taskListElement = document.getElementById('taskLists');
-
     taskListElement.innerHTML = '';
 
-    tasks.forEach((task) => {
+    let visibleTasks = tasks;
+
+    if (currentView === 'active') {
+        visibleTasks = tasks.filter(t => !t.archived);
+    } else if (currentView === 'archive') {
+        visibleTasks = tasks.filter(t => t.archived);
+    }
+
+    visibleTasks.forEach((task) => {
         const li = document.createElement('li');
         li.classList.add('task-item');
 
@@ -352,9 +385,27 @@ function renderTasks() {
             renderTasks();
         });
 
+        const archiveButton = document.createElement('button');
+        archiveButton.classList.add('task-archive');
+        archiveButton.textContent = task.archived ? '📋 一覧に戻す' : '📦 アーカイブ';
+
+        archiveButton.addEventListener('click', () => {
+            const archiveMsg = task.archived ? 'タスク一覧に戻しますか？' : 'このタスクをアーカイブしますか？';
+            if (!confirm(archiveMsg)) return;
+            task.archived = !task.archived;
+            saveTasks();
+            renderTasks();
+        });
+
         detail.appendChild(detailImage);
         detail.appendChild(infoList);
-        detail.appendChild(completeButton);
+        if (!task.archived) {
+            detail.appendChild(completeButton);
+        }
+
+        if (task.completed) {
+            detail.appendChild(archiveButton);
+        }
         detail.appendChild(deleteButton);
 
         li.appendChild(detail);
@@ -461,6 +512,7 @@ taskForm.addEventListener('submit', async (e) => {
         progress: 0,
         coverImageId,
         completed: false,
+        archived: false,
     };
 
     tasks.push(newTask);
