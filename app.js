@@ -194,27 +194,35 @@ function updateDeadlineFields() {
 // 日付指定を切り替えるたびに動作するように設定
 deadlineTypeSelect.addEventListener('change', updateDeadlineFields);
 
-const toggleButton = document.getElementById('taskInputToggle');
-const inputBody = document.getElementById('taskInputBody');
+// const toggleButton = document.getElementById('taskInputToggle');
+// const inputBody = document.getElementById('taskInputBody');
 
-if (toggleButton && inputBody) {
+// if (toggleButton && inputBody) {
 
-    // is-openクラスのつけ外しで開閉を管理
-    inputBody.classList.remove('is-open');
-    toggleButton.textContent = '＋ タスクを追加';
+//     // is-openクラスのつけ外しで開閉を管理
+//     inputBody.classList.remove('is-open');
+//     toggleButton.textContent = '＋ タスクを追加';
 
-    toggleButton.addEventListener('click', () => {
-        const willBeOpen = !inputBody.classList.contains('is-open');
+//     toggleButton.addEventListener('click', () => {
+//         const willBeOpen = !inputBody.classList.contains('is-open');
 
-        if (willBeOpen) {
-            inputBody.classList.add('is-open');
-            toggleButton.textContent = 'ー フォームを閉じる';
-        } else {
-            inputBody.classList.remove('is-open');
-            toggleButton.textContent = '＋ タスクを追加';
-        }
-    });
-}
+//         if (willBeOpen) {
+//             inputBody.classList.add('is-open');
+//             toggleButton.textContent = 'ー フォームを閉じる';
+//         } else {
+//             inputBody.classList.remove('is-open');
+//             toggleButton.textContent = '＋ タスクを追加';
+//         }
+//     });
+// }
+
+const taskInputToggle = document.getElementById('taskInputToggle');
+const taskInputSection = document.querySelector('.task-input');
+
+taskInputToggle.addEventListener('click', () => {
+    const isOpen = taskInputSection.classList.toggle('is-open');
+    taskInputToggle.textContent = isOpen ? '− フォームを閉じる' : '＋ タスクを追加';
+});
 
 // 入力したタスクの描写に関する設定
 function renderTasks() {
@@ -392,9 +400,13 @@ function renderTasks() {
         archiveButton.addEventListener('click', () => {
             const archiveMsg = task.archived ? 'タスク一覧に戻しますか？' : 'このタスクをアーカイブしますか？';
             if (!confirm(archiveMsg)) return;
-            task.archived = !task.archived;
-            saveTasks();
-            renderTasks();
+            li.classList.add('is-leaving');
+
+            setTimeout(() => {
+                task.archived = !task.archived;
+                saveTasks();
+                renderTasks();
+            }, 180);
         });
 
         detail.appendChild(detailImage);
@@ -414,14 +426,15 @@ function renderTasks() {
         //  開閉アクション
         // =========================
         compact.addEventListener('click', () => {
-            const isOpen = detail.style.display === 'block';
-            if (isOpen) {
-                detail.style.display = 'none';
-                expandHint.textContent = 'タップして全体を表示 ▼';
-            } else {
-                detail.style.display = 'block';
-                expandHint.textContent = 'タップして閉じる ▲';
-            }
+            const isOpen = li.classList.toggle('is-open');
+            expandHint.textContent = isOpen ? 'タップして閉じる' : 'タップして全体を表示';
+            // if (isOpen) {
+            //     detail.style.display = 'none';
+            //     expandHint.textContent = 'タップして全体を表示 ▼';
+            // } else {
+            //     detail.style.display = 'block';
+            //     expandHint.textContent = 'タップして閉じる ▲';
+            // }
         });
 
         if (task.completed) {
@@ -515,6 +528,12 @@ taskForm.addEventListener('submit', async (e) => {
         archived: false,
     };
 
+    if (currentView === 'archive') {
+        currentView = 'active';
+        updateToggleButton();
+        document.body.classList.toggle('archive-view', currentView === 'archive');
+    }
+
     tasks.push(newTask);
     // tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     tasks.sort((a, b) => {
@@ -529,10 +548,13 @@ taskForm.addEventListener('submit', async (e) => {
     taskDeadlineInput.value = '';
     taskDeadlineMonthInput.value = '';
     taskDeadlinePartSelect.value = 'early';
-    coverImageInput.value = ''; // ★ これ大事：同じ画像を連続で選べるようになる
+    coverImageInput.value = '';
     // ついでに exact に戻すなら：
     // deadlineTypeSelect.value = 'exact';
     // updateDeadlineFields();
+
+    taskInputSection.classList.remove('is-open');
+    taskInputToggle.textContent = '＋ タスクを追加';
 });
 
 updateDeadlineFields();

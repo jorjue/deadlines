@@ -382,12 +382,18 @@ footer {
 
 /* ---------- 詳細ビュー ---------- */
 .task-detail {
-  display: none;
-  /* 初期は閉じておく */
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid #e5e7eb;
-  animation: task-detail-expand 0.2s ease;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease, opacity 180ms ease;
+}
+
+.task-item.is-open .task-detail {
+  max-height: 800px;
+  opacity: 1;
 }
 
 @keyframes task-detail-expand {
@@ -478,12 +484,16 @@ footer {
 /* フォーム本体：デフォルトは閉じる */
 .task-input-body {
   margin-top: 12px;
-  display: none;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 120ms ease, opacity 200ms ease;
 }
 
 /* 開いた状態 */
-.task-input-body.is-open {
-  display: block;
+.task-input.is-open .task-input-body {
+  max-height: 1200px;
+  opacity: 1;
 }
 
 /* 画面が広いときは最初から開いておいてもいい場合はここで調整可能 */
@@ -520,4 +530,17 @@ footer {
 
 .task-completed .task-item-title {
   text-decoration: line-through;
+}
+
+.task-item.is-leaving {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }/*# sourceMappingURL=style.css.map */
