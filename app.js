@@ -1,8 +1,45 @@
+// ===== 定数 =====
+
+// LocalStorageから呼び出すためのキー
+const STORAGE_KEY = 'deadlineTasks';
+
+// 写真データベースのキー
+const DB_NAME = 'deadlinesDB';
+const DB_VERSION = 1;
+const IMAGE_STORE = 'images';
+
+const objectUrlCache = new Map();
+
+// タスクフォームのID取得
+const taskForm = document.getElementById('taskForm');
+
+// 日付設定（おおまか指定、日付指定）まわりのID取得
+const deadlineTypeSelect = document.getElementById('deadlineType');
+const exactDeadlineFields = document.getElementById('exactDeadlineFields');
+const roughDeadlineFields = document.getElementById('roughDeadlineFields');
+const taskDeadlineInput = document.getElementById('taskDeadline');
+const taskDeadlineMonthInput = document.getElementById('taskDeadlineMonth');
+
+
+
+
+// ===== 状態 =====
+
 // 期限管理の配列データ
 let tasks = [];
 
+// 拡大表示の変数
+let imageModalEl = null;
+let imageModalImgEl = null;
+
+// フィルター状態
 let currentView = 'active';
 
+
+
+// ===== ユーティリティ関数 =====
+
+// アーカイブ切替ボタンの見た目変更
 function updateToggleButton() {
     if (currentView === 'active') {
         currentToggleBtn.textContent = '📦';
@@ -11,6 +48,7 @@ function updateToggleButton() {
     }
 }
 
+// アーカイブ・実行中切替の動作
 const currentToggleBtn = document.getElementById('currentToggleBtn');
 currentToggleBtn.addEventListener('click', () => {
     if (currentView === 'active') {
@@ -26,19 +64,9 @@ currentToggleBtn.addEventListener('click', () => {
     }
 });
 
-// LocalStorageから呼び出すためのキー
-const STORAGE_KEY = 'deadlineTasks';
-
-// 写真データベースのキー
-const DB_NAME = 'deadlinesDB';
-const DB_VERSION = 1;
-const IMAGE_STORE = 'images';
-
-const objectUrlCache = new Map();
-
-// ユーティリティ関数
+// 設定した期限の代入
 function getDeadlineText(task) {
-  return task.displayDeadline || task.deadline || '期限未設定';
+    return task.displayDeadline || task.deadline || '期限未設定';
 }
 
 // データベースのバージョン管理
@@ -58,6 +86,7 @@ function openDB() {
     });
 }
 
+// 設定画像の保存
 async function saveImageBlob(blob) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -68,75 +97,6 @@ async function saveImageBlob(blob) {
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
     });
-}
-
-async function getImageBlob(imageId) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(IMAGE_STORE, 'readonly');
-        const store = tx.objectStore(IMAGE_STORE);
-        const req = store.get(imageId);
-
-        req.onsuccess = () => resolve(req.result?.blob ?? null);
-        req.onerror = () => reject(req.error);
-    });
-}
-
-async function deleteImageBlob(imageId) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(IMAGE_STORE, 'readwrite');
-        const store = tx.objectStore(IMAGE_STORE);
-        const req = store.delete(imageId);
-
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-    });
-}
-
-// 古いObjectURL、キャッシュの解放
-function revokeAllObjectUrls() {
-    for (const url of objectUrlCache.values()) {
-        URL.revokeObjectURL(url);
-    }
-    objectUrlCache.clear();
-}
-
-function saveTasks() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        return true;
-    } catch (err) {
-        console.error('保存に失敗:', err);
-        alert('保存容量が不足している可能性があります。画像サイズを小さくして再試行してください。');
-        return false;
-    }
-    // localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
-function loadTasks() {
-    const storedTasks = localStorage.getItem(STORAGE_KEY);
-    if (!storedTasks) {
-        return;
-    }
-
-    try {
-        const parsed = JSON.parse(storedTasks);
-        if (Array.isArray(parsed)) {
-            tasks = parsed.map(t => ({ ...t, completed: !!t.completed, archived: !!t.archived }));
-        } else {
-            tasks = [];
-        }
-    } catch (error) {
-        console.error('タスクの読み込みに失敗しました', error);
-        tasks = [];
-    }
-
-    tasks.sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return new Date(a.deadline) - new Date(b.deadline);
-    });
-    renderTasks();
 }
 
 // 画像データの圧縮
@@ -174,15 +134,79 @@ async function fileToCompressedBlob(file, {
     });
 }
 
-// タスクフォームのID取得
-const taskForm = document.getElementById('taskForm');
+async function getImageBlob(imageId) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE, 'readonly');
+        const store = tx.objectStore(IMAGE_STORE);
+        const req = store.get(imageId);
 
-// 日付設定（おおまか指定、日付指定）まわりのID取得
-const deadlineTypeSelect = document.getElementById('deadlineType');
-const exactDeadlineFields = document.getElementById('exactDeadlineFields');
-const roughDeadlineFields = document.getElementById('roughDeadlineFields');
-const taskDeadlineInput = document.getElementById('taskDeadline');
-const taskDeadlineMonthInput = document.getElementById('taskDeadlineMonth');
+        req.onsuccess = () => resolve(req.result?.blob ?? null);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function deleteImageBlob(imageId) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE, 'readwrite');
+        const store = tx.objectStore(IMAGE_STORE);
+        const req = store.delete(imageId);
+
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+// 古いObjectURL、キャッシュの解放
+function revokeAllObjectUrls() {
+    for (const url of objectUrlCache.values()) {
+        URL.revokeObjectURL(url);
+    }
+    objectUrlCache.clear();
+}
+
+
+
+// ===== データ操作（セーブ & ロード） =====
+
+function saveTasks() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        return true;
+    } catch (err) {
+        console.error('保存に失敗:', err);
+        alert('保存容量が不足している可能性があります。画像サイズを小さくして再試行してください。');
+        return false;
+    }
+}
+
+function loadTasks() {
+    const storedTasks = localStorage.getItem(STORAGE_KEY);
+    if (!storedTasks) {
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(storedTasks);
+        if (Array.isArray(parsed)) {
+            tasks = parsed.map(t => ({ ...t, completed: !!t.completed, archived: !!t.archived }));
+        } else {
+            tasks = [];
+        }
+    } catch (error) {
+        console.error('タスクの読み込みに失敗しました', error);
+        tasks = [];
+    }
+
+    tasks.sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return new Date(a.deadline) - new Date(b.deadline);
+    });
+    renderTasks();
+}
+
+
 const taskDeadlinePartSelect = document.getElementById('taskDeadlinePart');
 
 // 日付指定の表示切り替え部分
@@ -198,28 +222,6 @@ function updateDeadlineFields() {
 
 // 日付指定を切り替えるたびに動作するように設定
 deadlineTypeSelect.addEventListener('change', updateDeadlineFields);
-
-// const toggleButton = document.getElementById('taskInputToggle');
-// const inputBody = document.getElementById('taskInputBody');
-
-// if (toggleButton && inputBody) {
-
-//     // is-openクラスのつけ外しで開閉を管理
-//     inputBody.classList.remove('is-open');
-//     toggleButton.textContent = '＋ タスクを追加';
-
-//     toggleButton.addEventListener('click', () => {
-//         const willBeOpen = !inputBody.classList.contains('is-open');
-
-//         if (willBeOpen) {
-//             inputBody.classList.add('is-open');
-//             toggleButton.textContent = 'ー フォームを閉じる';
-//         } else {
-//             inputBody.classList.remove('is-open');
-//             toggleButton.textContent = '＋ タスクを追加';
-//         }
-//     });
-// }
 
 const taskInputToggle = document.getElementById('taskInputToggle');
 const taskInputSection = document.querySelector('.task-input');
@@ -461,13 +463,6 @@ function renderTasks() {
         compact.addEventListener('click', () => {
             const isOpen = li.classList.toggle('is-open');
             expandHint.textContent = isOpen ? 'タップして閉じる' : 'タップして全体を表示';
-            // if (isOpen) {
-            //     detail.style.display = 'none';
-            //     expandHint.textContent = 'タップして全体を表示 ▼';
-            // } else {
-            //     detail.style.display = 'block';
-            //     expandHint.textContent = 'タップして閉じる ▲';
-            // }
         });
 
         if (task.completed) {
@@ -477,8 +472,6 @@ function renderTasks() {
     });
 }
 
-let imageModalEl = null;
-let imageModalImgEl = null;
 
 function ensureImageModal() {
     if (imageModalEl) return;
