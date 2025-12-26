@@ -333,6 +333,11 @@ function renderTasks() {
         } else {
             detailImage.textContent = '表紙画像（未設定）';
         }
+        detailImage.style.cursor = task.coverImageId ? 'zoom-in' : 'default';
+        detailImage.addEventListener('click', () => {
+            if (!task.coverImageId) return;
+            openCoverImageModal(task.coverImageId);
+        });
 
         // 情報リスト
         const infoList = document.createElement('div');
@@ -443,6 +448,66 @@ function renderTasks() {
         taskListElement.appendChild(li);
     });
 }
+
+let imageModalEl = null;
+let imageModalImgEl = null;
+
+function ensureImageModal() {
+    if (imageModalEl) return;
+    imageModalEl = document.createElement('div');
+    imageModalEl.id = 'imageModal';
+    imageModalEl.className = 'image-modal';
+
+    const inner = document.createElement('div');
+    inner.className = 'image-modal-inner';
+
+    imageModalImgEl = document.createElement('img');
+    imageModalImgEl.className = 'image-modal-img';
+    imageModalImgEl.alt = '';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'image-modal-close';
+    closeBtn.type = 'button';
+    closeBtn.textContent = '×';
+
+    inner.appendChild(closeBtn);
+    inner.appendChild(imageModalImgEl);
+    imageModalEl.appendChild(inner);
+    document.body.appendChild(imageModalEl);
+
+    const close = () => {
+        imageModalEl.classList.remove('is-open');
+        if (imageModalImgEl.src.startsWith('blob')) {
+            URL.revokeObjectURL(imageModalImgEl.src);
+        }
+    }
+    imageModalImgEl.src = '';
+
+    imageModalEl.addEventListener('click', (e) => {
+        if (e.target === imageModalEl) close();
+    });
+
+    closeBtn.addEventListener('click', close);
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && imageModalEl.classList.contains('is-open')) {
+            close();
+        }
+    });
+}
+
+async function openCoverImageModal(coverImageId) {
+    if (!coverImageId) return;
+    ensureImageModal();
+
+    const blob = await getImageBlob(coverImageId);
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+    imageModalImgEl.src = url;
+    imageModalEl.classList.add('is-open');
+}
+
 
 taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();

@@ -47,7 +47,7 @@ header {
 #currentToggleBtn {
   padding: 2px;
   border: none;
-  background: rgba(0,0,0,0);
+  background: rgba(0, 0, 0, 0);
   color: white;
   border-radius: 999px;
   cursor: pointer;
@@ -279,7 +279,7 @@ select:focus {
   box-shadow: 0 2px 6px rgba(28, 185, 28, 0.1);
 }
 
-.task-archive{
+.task-archive {
   margin-top: 6px;
   margin-left: 10px;
   padding: 5px 10px;
@@ -287,10 +287,14 @@ select:focus {
   border: none;
   font-size: 0.7rem;
   cursor: pointer;
-  background: #64748b; /* グレー系 */
+  background: #64748b;
+  /* グレー系 */
   color: #fff;
 }
-.task-archive:hover { opacity: 0.9; }
+
+.task-archive:hover {
+  opacity: 0.9;
+}
 
 
 /* 画面幅が広いときは、タスク内を横並びにして情報を整理 */
@@ -561,5 +565,82 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important;}
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* =========================
+   画像モーダル
+========================= */
+.image-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+  z-index: 9999;
+}
+
+.image-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.image-modal-inner {
+  position: relative;
+  width: min(92vw, 980px);
+  max-height: 92vh;
+}
+
+.image-modal-img {
+  width: 100%;
+  max-height: 92vh;
+  object-fit: contain;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.image-modal-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 36px;
+}
+
+.task-detail-image {
+  position: relative;
+}
+
+.task-detail-image:hover {
+  filter: brightness(0.98);
+}
+
+.task-detail-image::after {
+  content: "🔍";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.task-detail-image:hover::after {
+  opacity: 1;
 }
