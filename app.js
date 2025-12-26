@@ -36,6 +36,11 @@ const IMAGE_STORE = 'images';
 
 const objectUrlCache = new Map();
 
+// ユーティリティ関数
+function getDeadlineText(task) {
+  return task.displayDeadline || task.deadline || '期限未設定';
+}
+
 // データベースのバージョン管理
 function openDB() {
     return new Promise((resolve, reject) => {
@@ -224,6 +229,40 @@ taskInputToggle.addEventListener('click', () => {
     taskInputToggle.textContent = isOpen ? '− フォームを閉じる' : '＋ タスクを追加';
 });
 
+function addInfoRow(infoList, labelText, valueText, { key } = {}) {
+    const row = document.createElement('div');
+    row.classList.add('task-info-row');
+    if (key) row.dataset.key = key;
+
+    const label = document.createElement('span');
+    label.classList.add('info-label');
+    label.textContent = labelText;
+
+    const value = document.createElement('span');
+    value.classList.add('info-value');
+    value.textContent = valueText;
+
+    row.append(label, value);
+    infoList.appendChild(row);
+
+    return { row, value };
+}
+
+// 詳細部分の取得・描写の関数
+function renderTaskInfoList(infoList, task) {
+    infoList.innerHTML = '';
+
+    addInfoRow(infoList, '期限', getDeadlineText(task), { key: 'deadline' });
+
+    if (task.submitTo) {
+        addInfoRow(infoList, '提出先', task.submitTo, { key: 'submitTo' });
+    }
+
+    // メモは後で task.memo を導入したら差し替える
+    addInfoRow(infoList, 'メモ', '（メモ機能は後で追加予定）', { key: 'memo' });
+}
+
+
 // 入力したタスクの描写に関する設定
 function renderTasks() {
     revokeAllObjectUrls();
@@ -278,7 +317,7 @@ function renderTasks() {
         const deadlineDiv = document.createElement('div');
         deadlineDiv.classList.add('task-item-deadline');
 
-        const textForDisplay = task.displayDeadline || task.deadline || '期限未設定';
+        const textForDisplay = getDeadlineText(task);
         deadlineDiv.textContent = `期限：${textForDisplay}`;
 
         // 進捗ゲージ（とりあえず 0〜100 を想定しておく）
@@ -342,19 +381,8 @@ function renderTasks() {
         // 情報リスト
         const infoList = document.createElement('div');
         infoList.classList.add('task-info-list');
+        renderTaskInfoList(infoList, task);
 
-        const infoDeadline = document.createElement('div');
-        infoDeadline.classList.add('task-info-row');
-        infoDeadline.innerHTML =
-            `<span class="info-label">期限</span><span class="info-value">${textForDisplay}</span>`;
-
-        const infoNote = document.createElement('div');
-        infoNote.classList.add('task-info-row');
-        infoNote.innerHTML =
-            `<span class="info-label">メモ</span><span class="info-value">（メモ機能は後で追加予定）</span>`;
-
-        infoList.appendChild(infoDeadline);
-        infoList.appendChild(infoNote);
 
         // 削除ボタン（詳細ビュー内の右下）
         const deleteButton = document.createElement('button');
@@ -515,6 +543,8 @@ taskForm.addEventListener('submit', async (e) => {
     const taskTitleInput = document.getElementById('taskTitle');
     const coverImageInput = document.getElementById('coverImage');
     const taskTitle = taskTitleInput.value.trim();
+    const submitToInput = document.getElementById('taskSubmitTo');
+    const submitTo = submitToInput.value.trim() || null;
 
     const deadlineType = deadlineTypeSelect.value;
 
@@ -589,6 +619,7 @@ taskForm.addEventListener('submit', async (e) => {
         displayDeadline,
         progress: 0,
         coverImageId,
+        submitTo: submitTo || null,
         completed: false,
         archived: false,
     };
@@ -614,6 +645,7 @@ taskForm.addEventListener('submit', async (e) => {
     taskDeadlineMonthInput.value = '';
     taskDeadlinePartSelect.value = 'early';
     coverImageInput.value = '';
+    submitToInput.value = '';
     // ついでに exact に戻すなら：
     // deadlineTypeSelect.value = 'exact';
     // updateDeadlineFields();

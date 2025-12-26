@@ -30,14 +30,17 @@
             <button type="button" class="task-input-toggle" id="taskInputToggle">＋ タスクを追加</button>
 
             <div class="task-input-body" id="taskInputBody">
-
+                
                 <form id="taskForm">
-
+                    
                     <label for="taskTitle">タスク名</label>
                     <input type="text" class="task-title" id="taskTitle" placeholder="タスク名を入力">
-
+                    
                     <label for="coverImage">表示画像（任意）</label>
                     <input type="file" id="coverImage" accept="image/" capture="environment">
+                    
+                    <label for="taskSubmitTo">提出先（任意）</label>
+                    <input type="text" id="taskSubmitTo" placeholder="例： ○○先生 / 総務課 / Moodle">
 
                     <label for="deadlineType">提出期限の指定方法</label>
                     <select id="deadlineType">
@@ -45,19 +48,20 @@
                         <option value="rough">おおまか指定</option>
                     </select>
 
+                    
                     <div id="exactDeadlineFields">
                         <label for="taskDeadline">提出期限（日付）</label>
                         <div class="date-input-wrapper">
                             <input type="date" class="task-deadline" id="taskDeadline">
                         </div>
                     </div>
-
+                    
                     <div id="roughDeadlineFields">
                         <label for="taskDeadlineMonth">提出期限（月）</label>
                         <div class="date-input-wrapper">
                             <input type="month" id="taskDeadlineMonth">
                         </div>
-
+                        
                         <label for="taskDeadlinePart">おおまか指定</label>
                         <select id="taskDeadlinePart">
                             <option value="early">上旬</option>
@@ -65,6 +69,7 @@
                             <option value="late">下旬</option>
                         </select>
                     </div>
+                    
 
                     <button type="submit" class="task-submit" id="taskSubmit">追加</button>
                 </form>
