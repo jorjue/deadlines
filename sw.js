@@ -1,4 +1,4 @@
-const CACHE_NAME = 'deadlines-shell-v11';
+const CACHE_NAME = 'deadlines-shell-v12';
 
 const INDEX_URL = new URL('./index.html', self.registration.scope).toString();
 
