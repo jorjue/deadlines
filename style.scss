@@ -29,6 +29,9 @@ body {
 
 /* ヘッダー */
 header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   background: #0f172a;
   color: #f9fafb;
   padding: 16px 20px;
