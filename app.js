@@ -20,7 +20,9 @@ const roughDeadlineFields = document.getElementById('roughDeadlineFields');
 const taskDeadlineInput = document.getElementById('taskDeadline');
 const taskDeadlineMonthInput = document.getElementById('taskDeadlineMonth');
 
-
+// 表示状態切替ボタン
+const currentToggleBtn = document.getElementById('currentToggleBtn');
+const viewDropdown = document.getElementById('viewDropdown');
 
 
 // ===== 状態 =====
@@ -33,7 +35,11 @@ let imageModalEl = null;
 let imageModalImgEl = null;
 
 // フィルター状態
-let currentView = 'active';
+// let currentView = 'active';
+const viewState = {
+    scope: 'all',
+    tagId: null,
+};
 
 
 
@@ -41,28 +47,50 @@ let currentView = 'active';
 
 // アーカイブ切替ボタンの見た目変更
 function updateToggleButton() {
-    if (currentView === 'active') {
-        currentToggleBtn.textContent = '📦';
-    } else if (currentView === 'archive') {
-        currentToggleBtn.textContent = '📋';
+    switch (viewState.scope) {
+        case 'active':
+            currentToggleBtn.textContent = '📋';
+            break;
+
+        case 'archive':
+            currentToggleBtn.textContent = '📦';
+            break;
+
+        case 'all':
+        default:
+            currentToggleBtn.textContent = '📚';
     }
 }
 
 // アーカイブ・実行中切替の動作
-const currentToggleBtn = document.getElementById('currentToggleBtn');
-currentToggleBtn.addEventListener('click', () => {
-    if (currentView === 'active') {
-        currentView = 'archive';
-        updateToggleButton();
-        document.body.classList.toggle('archive-view', currentView === 'archive');
-        renderTasks();
-    } else if (currentView === 'archive') {
-        currentView = 'active';
-        updateToggleButton();
-        document.body.classList.toggle('archive-view', currentView === 'archive');
-        renderTasks();
-    }
+currentToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !viewDropdown.classList.contains('hidden');
+    viewDropdown.classList.toggle('hidden', isOpen);
+    currentToggleBtn.setAttibute('aria-expanded', String(!isOpen));
 });
+
+viewDropdown.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-scope]');
+
+    const scope = btn.dataset.scope;
+
+    viewState.scope = scope;
+    viewState.tagId = null;
+
+    updateToggleButton();
+    document.body.classList.toggle('archive-view', scope === ('archive'));
+    renderTasks();
+
+    viewDropdown.classList.add('hidden');
+    currentToggleBtn.setAttribute('aria-expanded', 'false');
+})
+
+document.addEventListener('click', () => {
+    viewDropdown.classList.add('hidden');
+    currentToggleBtn.setAttribute('aria-expanded', 'false');
+});
+
 
 // 設定した期限の代入
 function getDeadlineText(task) {
@@ -265,6 +293,29 @@ function renderTaskInfoList(infoList, task) {
 }
 
 
+//　表示しているタスクのフィルター処理
+function getVisibleTasks(allTasks, viewState) {
+    switch (viewState.scope) {
+        case 'active':
+            return allTasks.filter(t => !t.archived);
+
+        case 'archive':
+            return allTasks.filter(t => t.archived);
+
+        case 'tag':
+            return allTasks.filter(t =>
+                Array.isArray(t.tagIds) && t.tagIds.includes(viewState.tagId)
+            );
+
+        case 'all':
+        default:
+            return allTasks;
+    }
+}
+
+
+// ===== renderTasks() =====
+
 // 入力したタスクの描写に関する設定
 function renderTasks() {
     revokeAllObjectUrls();
@@ -272,13 +323,15 @@ function renderTasks() {
     const taskListElement = document.getElementById('taskLists');
     taskListElement.innerHTML = '';
 
-    let visibleTasks = tasks;
+    // let visibleTasks = tasks;
 
-    if (currentView === 'active') {
-        visibleTasks = tasks.filter(t => !t.archived);
-    } else if (currentView === 'archive') {
-        visibleTasks = tasks.filter(t => t.archived);
-    }
+    // if (currentView === 'active') {
+    //     visibleTasks = tasks.filter(t => !t.archived);
+    // } else if (currentView === 'archive') {
+    //     visibleTasks = tasks.filter(t => t.archived);
+    // }
+
+    const visibleTasks = getVisibleTasks(tasks, viewState);
 
     visibleTasks.forEach((task) => {
         const li = document.createElement('li');
@@ -647,5 +700,6 @@ taskForm.addEventListener('submit', async (e) => {
     taskInputToggle.textContent = '＋ タスクを追加';
 });
 
+updateToggleButton();
 updateDeadlineFields();
 loadTasks();

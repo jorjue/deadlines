@@ -21,7 +21,15 @@
 
         <h1 class="header-title">提出期限管理アプリ（仮）</h1>
 
-        <button id="currentToggleBtn">📦</button>
+        <div class="view-menu">
+            <button id="currentToggleBtn">≡</button>
+    
+            <div id="viewDropdown" class="view-dropdown hidden">
+                <button data-scope="all">すべて</button>
+                <button data-scope="active">実行中</button>
+                <button data-scope="archive">アーカイブ</button>
+            </div>
+        </div>
     </header>
 
     <main>
