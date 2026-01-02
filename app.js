@@ -703,3 +703,26 @@ taskForm.addEventListener('submit', async (e) => {
 updateToggleButton();
 updateDeadlineFields();
 loadTasks();
+
+function updateHeaderHeightVar() {
+    const header = document.querySelector('header');
+    if (!header) return;
+
+    const h = Math.ceil(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--header-height', `${h}px`);
+}
+
+updateHeaderHeightVar();
+
+if (document.fonts?.ready) {
+    document.fonts.ready.then(updateHeaderHeightVar);
+}
+
+let __headerHeightTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(__headerHeightTimer);
+    __headerHeightTimer = setTimeout(updateHeaderHeightVar, 100);
+});
+window.addEventListener('orientationchange', () => {
+    setTimeout(updateHeaderHeightVar, 200);
+});

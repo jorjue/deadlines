@@ -698,3 +698,19 @@ footer {
 .task-detail-image:hover::after {
   opacity: 1;
 }
+
+@media  (max-width: 768px) {
+
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+  }
+
+  main {
+    margin-top: 0;
+    padding-top: calc( 24px + var(--header-height, 72px) ); 
+  }
+}
