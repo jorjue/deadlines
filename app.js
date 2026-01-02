@@ -67,24 +67,15 @@ currentToggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = !viewDropdown.classList.contains('hidden');
     viewDropdown.classList.toggle('hidden', isOpen);
-    currentToggleBtn.setAttibute('aria-expanded', String(!isOpen));
+    currentToggleBtn.setAttribute('aria-expanded', String(!isOpen));
 });
 
 viewDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
     const btn = e.target.closest('button[data-scope]');
-
-    const scope = btn.dataset.scope;
-
-    viewState.scope = scope;
-    viewState.tagId = null;
-
-    updateToggleButton();
-    document.body.classList.toggle('archive-view', scope === ('archive'));
-    renderTasks();
-
-    viewDropdown.classList.add('hidden');
-    currentToggleBtn.setAttribute('aria-expanded', 'false');
-})
+    if (!btn) return;
+    applyViewScope(btn.dataset.scope);
+});
 
 document.addEventListener('click', () => {
     viewDropdown.classList.add('hidden');
@@ -192,6 +183,27 @@ function revokeAllObjectUrls() {
         URL.revokeObjectURL(url);
     }
     objectUrlCache.clear();
+}
+
+// ビューモードの自動切り替え関数
+function setViewScope(scope) {
+    viewState.scope = scope;
+    viewState.tagId = null;
+    updateToggleButton();
+    document.body.classList.toggle('archive-view', viewState.scope === 'archive');
+}
+// setViewScopeとrenderTasksの共通化関数
+function applyViewScope(scope, { render = true, closeMenu = true } = {}) {
+    setViewScope(scope);
+
+    if (render) {
+        renderTasks();
+    }
+
+    if (closeMenu) {
+        viewDropdown.classList.add('hidden');
+        currentToggleBtn.setAttribute('aria-expanded', 'false');
+    }
 }
 
 
@@ -303,6 +315,7 @@ function getVisibleTasks(allTasks, viewState) {
             return allTasks.filter(t => t.archived);
 
         case 'tag':
+            if (!viewState.tagId) return allTasks;
             return allTasks.filter(t =>
                 Array.isArray(t.tagIds) && t.tagIds.includes(viewState.tagId)
             );
@@ -670,11 +683,10 @@ taskForm.addEventListener('submit', async (e) => {
         archived: false,
     };
 
-    if (currentView === 'archive') {
-        currentView = 'active';
-        updateToggleButton();
-        document.body.classList.toggle('archive-view', currentView === 'archive');
+    if (viewState.scope === 'archive') {
+        applyViewScope('active', { render: false, closeMenu: false });
     }
+
 
     tasks.push(newTask);
     // tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
@@ -700,7 +712,7 @@ taskForm.addEventListener('submit', async (e) => {
     taskInputToggle.textContent = '＋ タスクを追加';
 });
 
-updateToggleButton();
+setViewScope(viewState.scope);
 updateDeadlineFields();
 loadTasks();
 
