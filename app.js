@@ -98,12 +98,13 @@ function setupTaskFormFab() {
     function openTaskFormIfClosed() {
         if (!taskInput.classList.contains('is-open')) {
             taskInputToggleBtn.click();
-        }
+        } 
     }
 
     fab.addEventListener('click', () => {
         openTaskFormIfClosed();
         taskInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        requestAnimationFrame(() => requestAnimationFrame(focusTaskTitle));
     });
 
     let observer;
@@ -129,7 +130,21 @@ function setupTaskFormFab() {
     
     resetObserver();
     window.addEventListener('resize', () => resetObserver());
-    window.addEventListener('orientationchange', () => setTimeout(resetObserver), 200);
+    window.addEventListener('orientationchange', () => setTimeout(resetObserver, 200));
+}
+
+// タスクタイトル入力フォームにフォーカスさせる
+function focusTaskTitle() {
+    const taskTitle = document.getElementById('taskTitle');
+    if (!taskTitle) return;
+
+    requestAnimationFrame(() => {
+        try {
+            taskTitle.focus({ preventScroll: true });
+        } catch {
+            taskTitle.focus();
+        }
+    });
 }
 
 // 設定した期限の代入
@@ -318,6 +333,11 @@ const taskInputSection = document.querySelector('.task-input');
 taskInputToggle.addEventListener('click', () => {
     const isOpen = taskInputSection.classList.toggle('is-open');
     taskInputToggle.textContent = isOpen ? '− フォームを閉じる' : '＋ タスクを追加';
+
+    const willOpen = taskInputSection.classList.contains('is-open');
+    if (willOpen) {
+        focusTaskTitle();
+    }
 });
 
 function addInfoRow(infoList, labelText, valueText, { key } = {}) {
