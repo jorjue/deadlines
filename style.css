@@ -597,6 +597,9 @@ footer {
     transition: none !important;
     animation: none !important;
   }
+  .fab-task {
+    transition: none;
+  }
 }
 /* =========================
    画像モーダル
@@ -684,4 +687,30 @@ footer {
     margin-top: 0;
     padding-top: calc(24px + var(--header-height, 72px));
   }
+}
+.fab-task {
+  position: fixed;
+  right: 24px;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  border: none;
+  cursor: pointer;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: auto;
+}
+.fab-task.hidden {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  pointer-events: none;
 }/*# sourceMappingURL=style.css.map */

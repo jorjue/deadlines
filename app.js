@@ -82,6 +82,55 @@ document.addEventListener('click', () => {
     currentToggleBtn.setAttribute('aria-expanded', 'false');
 });
 
+// タスクフォームがヘッダーに隠れたら右下にボタンを出す
+function setupTaskFormFab() {
+    const header = document.querySelector('header');
+    const fab = document.getElementById('fabTaskBtn');
+
+    const taskInputToggleBtn = document.getElementById('taskInputToggle');
+
+    const taskInput = document.getElementById('taskInput');
+
+    if (!header || !fab || !taskInputToggleBtn || !taskInput) return;
+
+    taskInput.style.scrollMarginTop = `${Math.ceil(header.getBoundingClientRect().height)}px`;
+
+    function openTaskFormIfClosed() {
+        if (!taskInput.classList.contains('is-open')) {
+            taskInputToggleBtn.click();
+        }
+    }
+
+    fab.addEventListener('click', () => {
+        openTaskFormIfClosed();
+        taskInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    let observer;
+
+    function resetObserver() {
+        if (observer) observer.disconnect();
+
+        const headerH = Math.ceil(header.getBoundingClientRect().height);
+
+        observer = new IntersectionObserver(
+            ([entry]) => {
+                fab.classList.toggle('hidden', entry.isIntersecting);
+            },
+            {
+                root: null,
+                threshold: 0.01,
+                rootMargin: `${headerH}px 0px 0px`,
+            }
+        );
+
+        observer.observe(taskInputToggleBtn);
+    }
+    
+    resetObserver();
+    window.addEventListener('resize', () => resetObserver());
+    window.addEventListener('orientationchange', () => setTimeout(resetObserver), 200);
+}
 
 // 設定した期限の代入
 function getDeadlineText(task) {
@@ -714,6 +763,7 @@ taskForm.addEventListener('submit', async (e) => {
 
 setViewScope(viewState.scope);
 updateDeadlineFields();
+setupTaskFormFab();
 loadTasks();
 
 function updateHeaderHeightVar() {
