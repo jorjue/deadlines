@@ -8,11 +8,14 @@
     <title>提出期限管理アプリ（仮）</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="./manifest.webmanifest">
-
+    
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+    
+    <!-- バージョン表記（アプリ更新の際に手動で数値を進める） -->
+    <meta name="app-version" content="1.0.0">
 </head>
 
 <body>
@@ -96,8 +99,11 @@
     </main>
 
     <footer>
-        &copy; Atsushi 2025
+        <small>
+            &copy; Saorui 2025-2026 <span id="appVersion">v0.0.0</span>
+        </small>
     </footer>
+
 
     <script src="app.js"></script>
     <script>

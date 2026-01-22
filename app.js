@@ -35,9 +35,8 @@ let imageModalEl = null;
 let imageModalImgEl = null;
 
 // フィルター状態
-// let currentView = 'active';
 const viewState = {
-    scope: 'all',
+    scope: 'active',
     tagId: null,
 };
 
@@ -103,7 +102,12 @@ function setupTaskFormFab() {
 
     fab.addEventListener('click', () => {
         openTaskFormIfClosed();
-        taskInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        const headerH = Math.ceil(header.getBoundingClientRect().height);
+        const y = taskInputToggleBtn.getBoundingClientRect().top + window.scrollY - headerH - 8;
+
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth'});
+        
         requestAnimationFrame(() => requestAnimationFrame(focusTaskTitle));
     });
 
@@ -808,3 +812,11 @@ window.addEventListener('resize', () => {
 window.addEventListener('orientationchange', () => {
     setTimeout(updateHeaderHeightVar, 200);
 });
+
+// バージョン表記
+(function showVersion() {
+    const el = document.getElementById('appVersion');
+    const meta = document.querySelector('meta[name="app-version"]');
+    if (!el || !meta) return;
+    el.textContent = `v${meta.content}`;
+})();
