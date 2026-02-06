@@ -201,6 +201,14 @@ select:focus {
   display: none;
 }
 
+/* タスクフォームの送信ボタン周り */
+.task-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* 追加ボタン */
 .task-submit {
   margin-top: 8px;
@@ -226,6 +234,24 @@ select:focus {
 .task-submit:active {
   background: #1d4ed8;
   box-shadow: 0 4px 9px rgba(30, 64, 175, 0.6);
+  transform: translateY(1px);
+}
+
+.cancel-edit {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, transform 0.1s ease;
+}
+.cancel-edit:hover {
+  background: #f3f4f6;
+}
+.cancel-edit:active {
   transform: translateY(1px);
 }
 
@@ -324,6 +350,18 @@ select:focus {
   background: #1cb91c;
   transform: translateY(1px);
   box-shadow: 0 2px 6px rgba(28, 185, 28, 0.1);
+}
+
+.task-edit {
+  margin-top: 6px;
+  margin-left: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.7rem;
+  cursor: pointer;
+  background: #f59e0b;
+  color: #fff;
 }
 
 .task-archive {
@@ -548,6 +586,15 @@ footer {
 .task-input.is-open .task-input-body {
   max-height: 1200px;
   opacity: 1;
+}
+
+.task-input.is-editing {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+.task-input.is-editing .task-submit {
+  background: #f59e0b;
+  box-shadow: 0 8px 15px rgba(245, 158, 11, 0.35);
 }
 
 /* 画面が広いときは最初から開いておいてもいい場合はここで調整可能 */

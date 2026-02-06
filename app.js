@@ -40,7 +40,17 @@ const viewState = {
     tagId: null,
 };
 
+// 編集状態
+let editingTaskId = null;
 
+
+// グローバル定数
+const taskTitleInput = document.getElementById('taskTitle');
+const coverImageInput = document.getElementById('coverImage');
+const submitToInput = document.getElementById('taskSubmitTo');
+const taskSubmitButton = document.getElementById('taskSubmit');
+const cancelEditButton = document.getElementById('cancelEditButton');
+const memoInput = document.getElementById('taskMemo');
 
 // ===== ユーティリティ関数 =====
 
@@ -97,7 +107,7 @@ function setupTaskFormFab() {
     function openTaskFormIfClosed() {
         if (!taskInput.classList.contains('is-open')) {
             taskInputToggleBtn.click();
-        } 
+        }
     }
 
     fab.addEventListener('click', () => {
@@ -106,8 +116,8 @@ function setupTaskFormFab() {
         const headerH = Math.ceil(header.getBoundingClientRect().height);
         const y = taskInputToggleBtn.getBoundingClientRect().top + window.scrollY - headerH - 8;
 
-        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth'});
-        
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+
         requestAnimationFrame(() => requestAnimationFrame(focusTaskTitle));
     });
 
@@ -131,7 +141,7 @@ function setupTaskFormFab() {
 
         observer.observe(taskInputToggleBtn);
     }
-    
+
     resetObserver();
     window.addEventListener('resize', () => resetObserver());
     window.addEventListener('orientationchange', () => setTimeout(resetObserver, 200));
@@ -155,6 +165,56 @@ function focusTaskTitle() {
 function getDeadlineText(task) {
     return task.displayDeadline || task.deadline || '期限未設定';
 }
+
+// 詳細ビューの編集機能の関数
+function enterEditMode(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    editingTaskId = taskId;
+
+    // 現在の入力内容をフォームに流し込む
+    taskTitleInput.value = task.title;
+    submitToInput.value = task.submitTo ?? '';
+    memoInput.value = task.memo ?? '';
+    memoInput.style.display = 'block';
+
+    deadlineTypeSelect.value = task.deadlineType;
+    updateDeadlineFields();
+
+    if (task.deadlineType === 'exact') {
+        taskDeadlineInput.value = task.deadline;
+    } else {
+        taskDeadlineMonthInput.value = task.roughMonth ?? (task.deadline ?? '').slice(0, 7);
+        taskDeadlinePartSelect.value = task.roughPart ?? 'early';
+    }
+
+    taskSubmitButton.textContent = '更新する';
+    cancelEditButton.style.display = 'inline-block';
+
+    if (!taskInputSection.classList.contains('is-open')) {
+        taskInputToggle.click();
+    }
+    taskInputSection.scrollIntoView({ behavior: 'smooth' });
+
+    taskInputSection.classList.add('is-editing');
+    
+}
+
+// 編集機能のキャンセルボタン
+function exitEditMode() {
+    editingTaskId = null;
+    taskForm.reset();
+    taskSubmitButton.textContent = '追加';
+    cancelEditButton.style.display = 'none';
+    memoInput.value = '';
+    memoInput.style.display = 'none';
+    taskInputSection.classList.remove('is-open');
+    taskInputToggle.textContent = '＋ タスクを追加';
+    taskInputSection.classList.remove('is-editing');
+}
+
+cancelEditButton.addEventListener('click', exitEditMode);
 
 // データベースのバージョン管理
 function openDB() {
@@ -307,6 +367,20 @@ function loadTasks() {
         tasks = [];
     }
 
+    tasks = tasks.map(t => ({
+        completed: false,
+        archived: false,
+        submitTo: null,
+        memo: null,
+        photos: [],
+        roughMonth: null,
+        roughPart: null,
+        ...t,
+        completed: !!t.completed,
+        archived: !!t.archived,
+        photos: Array.isArray(t.photos) ? t.photos : [],
+    }));
+
     tasks.sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return new Date(a.deadline) - new Date(b.deadline);
@@ -374,7 +448,7 @@ function renderTaskInfoList(infoList, task) {
     }
 
     // メモは後で task.memo を導入したら差し替える
-    addInfoRow(infoList, 'メモ', '（メモ機能は後で追加予定）', { key: 'memo' });
+    addInfoRow(infoList, 'メモ', task.memo, { key: 'memo' });
 }
 
 
@@ -408,14 +482,6 @@ function renderTasks() {
 
     const taskListElement = document.getElementById('taskLists');
     taskListElement.innerHTML = '';
-
-    // let visibleTasks = tasks;
-
-    // if (currentView === 'active') {
-    //     visibleTasks = tasks.filter(t => !t.archived);
-    // } else if (currentView === 'archive') {
-    //     visibleTasks = tasks.filter(t => t.archived);
-    // }
 
     const visibleTasks = getVisibleTasks(tasks, viewState);
 
@@ -567,6 +633,14 @@ function renderTasks() {
             renderTasks();
         });
 
+        const editBtn = document.createElement('button');
+        editBtn.classList.add('task-edit');
+        editBtn.textContent = 'タスクを編集';
+        editBtn.addEventListener('click', () => {
+            enterEditMode(task.id)
+        });
+
+
         const archiveButton = document.createElement('button');
         archiveButton.classList.add('task-archive');
         archiveButton.textContent = task.archived ? '📋 一覧に戻す' : '📦 アーカイブ';
@@ -592,6 +666,7 @@ function renderTasks() {
         if (task.completed) {
             detail.appendChild(archiveButton);
         }
+        detail.appendChild(editBtn);
         detail.appendChild(deleteButton);
 
         li.appendChild(detail);
@@ -669,15 +744,12 @@ async function openCoverImageModal(coverImageId) {
 }
 
 
+// タスク追加ボタンの動作
 taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const taskTitleInput = document.getElementById('taskTitle');
-    const coverImageInput = document.getElementById('coverImage');
     const taskTitle = taskTitleInput.value.trim();
-    const submitToInput = document.getElementById('taskSubmitTo');
     const submitTo = submitToInput.value.trim() || null;
-
     const deadlineType = deadlineTypeSelect.value;
 
     if (!taskTitle) {
@@ -695,6 +767,9 @@ taskForm.addEventListener('submit', async (e) => {
         return;
     }
 
+    let roughMonth = null;
+    let roughPart = null;
+
     let normalizedDeadline = '';
     let displayDeadline = '';
 
@@ -704,6 +779,10 @@ taskForm.addEventListener('submit', async (e) => {
     } else {
         const monthValue = taskDeadlineMonthInput.value;   // '2025-12'
         const partValue = taskDeadlinePartSelect.value;    // 'early'など
+
+        roughMonth = monthValue;
+        roughPart = partValue;
+
         const [year, month] = monthValue.split('-');
 
         let day;
@@ -742,26 +821,48 @@ taskForm.addEventListener('submit', async (e) => {
         coverImageId = await saveImageBlob(blob);
     }
 
+    if (editingTaskId !== null) {
+        const task = tasks.find(t => t.id === editingTaskId);
+        if (!task) return;
 
-    const newTask = {
-        id: Date.now(),
-        title: taskTitle,
-        deadlineType,
-        deadline: normalizedDeadline,
-        displayDeadline,
-        progress: 0,
-        coverImageId,
-        submitTo: submitTo || null,
-        completed: false,
-        archived: false,
-    };
+        task.title = taskTitle;
+        task.submitTo = submitTo || null;
+        task.deadlineType = deadlineType;
+        task.deadline = normalizedDeadline;
+        task.displayDeadline = displayDeadline;
+
+        task.roughMonth = roughMonth;
+        task.roughPart = roughPart;
+
+        const memoValue = memoInput.value.trim();
+        task.memo = memoValue ? memoValue : null;
+
+        editingTaskId = null;
+        exitEditMode();
+    } else {
+        const newTask = {
+            id: Date.now(),
+            title: taskTitle,
+            deadlineType,
+            deadline: normalizedDeadline,
+            displayDeadline,
+            roughMonth,
+            roughPart,
+            progress: 0,
+            coverImageId,
+            submitTo: submitTo || null,
+            completed: false,
+            archived: false,
+            memo: null,
+            photos: [],
+        };
+        tasks.push(newTask);
+    }
 
     if (viewState.scope === 'archive') {
         applyViewScope('active', { render: false, closeMenu: false });
     }
 
-
-    tasks.push(newTask);
     // tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     tasks.sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;

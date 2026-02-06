@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
     
     <!-- バージョン表記（アプリ更新の際に手動で数値を進める） -->
-    <meta name="app-version" content="1.0.1">
+    <meta name="app-version" content="1.0.2">
     <meta name="format-detection" content="telephone=no">
 
 </head>
@@ -56,6 +56,9 @@
                     <label for="taskSubmitTo">提出先（任意）</label>
                     <input type="text" id="taskSubmitTo" placeholder="例： ○○先生 / 総務課 / Moodle">
 
+                    <label for="taskMemo" class="task-memo-label">メモ</label>
+                    <textarea rows="3" id="taskMemo" class="task-memo" placeholder="補足メモ"></textarea>
+
                     <label for="deadlineType">提出期限の指定方法</label>
                     <select id="deadlineType">
                         <option value="exact">日付で指定</option>
@@ -85,7 +88,10 @@
                     </div>
                     
 
-                    <button type="submit" class="task-submit" id="taskSubmit">追加</button>
+                    <div class="task-form-actions">
+                        <button type="submit" class="task-submit" id="taskSubmit">追加</button>
+                        <button type="button" class="cancel-edit" id="cancelEditButton">編集を中止</button>
+                    </div>
                 </form>
             </div>
         </section>
