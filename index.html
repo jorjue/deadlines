@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
     
     <!-- バージョン表記（アプリ更新の際に手動で数値を進める） -->
-    <meta name="app-version" content="1.0.2">
+    <meta name="app-version" content="1.0.3">
     <meta name="format-detection" content="telephone=no">
 
 </head>
@@ -89,8 +89,8 @@
                     
 
                     <div class="task-form-actions">
-                        <button type="submit" class="task-submit" id="taskSubmit">追加</button>
-                        <button type="button" class="cancel-edit" id="cancelEditButton">編集を中止</button>
+                        <button type="submit" class="task-submit button-pill" id="taskSubmit">タスクを追加</button>
+                        <button type="button" class="cancel-edit button-pill" id="cancelEditButton">編集を中止</button>
                     </div>
                 </form>
             </div>
@@ -106,10 +106,17 @@
         <button id="fabTaskBtn" class="fab-task hidden" aria-label="タスク入力を開く">＋</button>
     </main>
 
-    <footer>
-        <small>
-            &copy; Saorui 2025–2026 <span id="appVersion">v0.0.0</span>
-        </small>
+    <footer class="site-footer">
+        <p class="footer-copy">
+                &copy; Saorui 2025–2026 <span id="appVersion">v0.0.0</span>
+        </p>
+        <p class="footer-message">
+            このアプリが役に立ったら、コーヒー一杯で応援してもらえると嬉しいです。（準備中）
+        </p>
+        <a href="#" target="_blank" rel="noopener noreferrer" class="coffee-button">
+        <span class="coffee-button-icon">☕</span>
+        <span class="coffee-button-text">PayPayで応援する</span>
+        </a>
     </footer>
 
 

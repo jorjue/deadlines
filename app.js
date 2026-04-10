@@ -48,6 +48,7 @@ let editingTaskId = null;
 const taskTitleInput = document.getElementById('taskTitle');
 const coverImageInput = document.getElementById('coverImage');
 const submitToInput = document.getElementById('taskSubmitTo');
+const taskMemoInput = document.getElementById('taskMemo');
 const taskSubmitButton = document.getElementById('taskSubmit');
 const cancelEditButton = document.getElementById('cancelEditButton');
 const memoInput = document.getElementById('taskMemo');
@@ -205,7 +206,7 @@ function enterEditMode(taskId) {
 function exitEditMode() {
     editingTaskId = null;
     taskForm.reset();
-    taskSubmitButton.textContent = '追加';
+    taskSubmitButton.textContent = 'タスクを追加';
     cancelEditButton.style.display = 'none';
     memoInput.value = '';
     memoInput.style.display = 'none';
@@ -750,6 +751,7 @@ taskForm.addEventListener('submit', async (e) => {
 
     const taskTitle = taskTitleInput.value.trim();
     const submitTo = submitToInput.value.trim() || null;
+    const taskMemo = taskMemoInput.value;
     const deadlineType = deadlineTypeSelect.value;
 
     if (!taskTitle) {
@@ -853,7 +855,7 @@ taskForm.addEventListener('submit', async (e) => {
             submitTo: submitTo || null,
             completed: false,
             archived: false,
-            memo: null,
+            memo: taskMemo,
             photos: [],
         };
         tasks.push(newTask);
@@ -878,9 +880,7 @@ taskForm.addEventListener('submit', async (e) => {
     taskDeadlinePartSelect.value = 'early';
     coverImageInput.value = '';
     submitToInput.value = '';
-    // ついでに exact に戻すなら：
-    // deadlineTypeSelect.value = 'exact';
-    // updateDeadlineFields();
+    taskMemoInput.value = '';
 
     taskInputSection.classList.remove('is-open');
     taskInputToggle.textContent = '＋ タスクを追加';
