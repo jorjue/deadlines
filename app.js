@@ -342,7 +342,11 @@ function checkUpcomingTasks() {
     }
 
     if (Notification.permission === 'default') {
-        Notification.requestPermission();
+        Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            checkUpcomingTasks();
+            }
+        });
         return;
     }
 
@@ -353,7 +357,7 @@ function checkUpcomingTasks() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const upcomingTasks = tasks. filter((task) => {
+    const upcomingTasks = tasks.filter((task) => {
         if (!task.deadline || task.completed || task.archived) {
             return false;
         }
