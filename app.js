@@ -378,6 +378,7 @@ function checkUpcomingTasks() {
     new Notification('期限が近いタスクがあります', {
         body: `${upcomingTasks.length}件のタスクが3日以内に期限を迎えます`,
     });
+
 }
 
 // ===== データ操作（セーブ & ロード） =====
