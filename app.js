@@ -207,7 +207,6 @@ function exitEditMode() {
     editingTaskId = null;
     taskForm.reset();
     taskSubmitButton.textContent = 'タスクを追加';
-    cancelEditButton.style.display = 'none';
     memoInput.value = '';
     memoInput.style.display = 'none';
     taskInputSection.classList.remove('is-open');
@@ -336,6 +335,46 @@ function applyViewScope(scope, { render = true, closeMenu = true } = {}) {
 }
 
 
+// 起動時に期限の近いものを通知する機能に関する関数
+function checkUpcomingTasks() {
+    if(!('Notification' in window)) {
+        return;
+    }
+
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+        return;
+    }
+
+    if (Notification.permission !== 'granted') {
+        return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcomingTasks = tasks. filter((task) => {
+        if (!task.deadline || task.completed || task.archived) {
+            return false;
+        }
+
+        const deadlineDate = new Date(task.deadline);
+        deadlineDate.setHours(0, 0, 0, 0);
+
+        const diffTime = deadlineDate - today;
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+        return diffDays >= 0 && diffDays <= 3;
+    })
+
+    if (upcomingTasks.length === 0) {
+        return;
+    }
+
+    new Notification('期限が近いタスクがあります', {
+        body: `${upcomingTasks.length}件のタスクが3日以内に期限を迎えます`,
+    });
+}
 
 // ===== データ操作（セーブ & ロード） =====
 
@@ -382,11 +421,9 @@ function loadTasks() {
         photos: Array.isArray(t.photos) ? t.photos : [],
     }));
 
-    tasks.sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return new Date(a.deadline) - new Date(b.deadline);
-    });
+    tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     renderTasks();
+    checkUpcomingTasks();
 }
 
 
